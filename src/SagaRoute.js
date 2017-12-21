@@ -12,6 +12,7 @@ import * as actions from './actions'
 export default class SagaRoute extends Component {
 
   static propTypes = {
+    isLoading: PropTypes.bool,
     loading: PropTypes.element,
     path: PropTypes.string.isRequired,
     component: PropTypes.oneOf([
@@ -31,60 +32,61 @@ export default class SagaRoute extends Component {
 
     //const { preload } = this.component = require(this.props.component)
 
-    if (this.props.prefetch && typeof this.props.prefetch === 'function') {
+    if (this.props.prefetch) {
       stored.addSaga(this.props)
     }
   }
 
-  runSaga = () => this.context.store.dispatch(actions.runSaga(this.props))
+  prefetch = () => this.context.store.dispatch(actions.runSaga(this.props))
 
   render() {
-    const { loading, component, children, prefetch, permissions, path, ...rest } = this.props
-    const permComponent = getRoutesUtils({
-      loading,
-      isLoading: this.props[component].loading,
-      listOfPermissions: permissions,
-      store: this.context.store,
-      prefetch: stored.hasSaga(this.props) ? this.runSaga : undefined,
-    })
-
-    const asyncComponent = (module) => require.resolve(module)
+    const { isLoading, loading, component, children, prefetch, permissions, path, ...rest } = this.props
 
     const UniversalComponent = universal(props => import(component), {
       loading: loading,
+      isLoading
+      ...rest
       /*onBefore:
       onLoad:*/
     })
 
-    if (React.isElement(component)) {
+    const permComponent = getRoutesUtils({
+      //UniversalComponent,
+      //props: { ...rest },
+      //isLoading: this.props[component].loading,
+      listOfPermissions: permissions,
+      store: this.context.store,
+      prefetch: stored.hasSaga(this.props) ? this.prefetch : undefined,
+    })
+
+    /*const componentParams = {
+      ...rest
+      path,
+    }
+
+    if (permissions) {
+      componentParams = merge(componentParams, ...permComponent(UniversalComponent))
+    }*/
+
+    if (!permissions && !children) {
       return (
-        <Route {...rest} path={path} component={component} />
+        <Route {...rest} path={path} component={UniversalComponent} />
       )
-    } else {
-      return children ? (
-        <Route {...rest} path={path} {...permComponent(require(component))}>
+    } else if (children) {
+      return permissions ? (
+        <Route {...rest} path={path} {...permComponent()}>
           {children}
         </Route>
       ) : (
-        <Route
-          {...rest}
-          path={path}
-          render={props => <UniversalComponent {...props} />}
-          //getComponent={() => asyncComponent(component)}
-          {...permComponent()}
-        />
+        <Route {...rest} path={path}>
+          {children}
+        </Route>
+      )
+    } else {
+      return (
+        <Route {...rest} path={path} {...permComponent(UniversalComponent)} />
       )
     }
-        /*render={props => (
-          this.props[component].loading ? (
-            React.createElement(this.component)
-            //<UniversalComponent page={component} {...this.props[component]} />
-          ) : (
-            React.createElement(loading, props)
-          )
-        )}*/
-      />
-    )
   }
 
 }

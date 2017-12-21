@@ -1,4 +1,4 @@
-export default ({ isLoading, loading, listOfPermissions, store, prefetch }) => {
+export default ({ listOfPermissions, store, prefetch }) => {
   const connect = (fn) => (nextState, replaceState) => fn(store, nextState, replaceState)
 
   function onEnterChain(...listOfOnEnters) {
@@ -15,11 +15,20 @@ export default ({ isLoading, loading, listOfPermissions, store, prefetch }) => {
         }
         callback()
       }, err => {
-        if (err) onEnterCb(err)
+        if (err) return onEnterCb(err)
         onEnterCb()
+        prefetch()
       })
     }
   }
+
+  /*function prefetchIfNeeded() {
+    return prefetch().then(() => )
+  }*/
+
+  /*function checkPermissions(chainedPermissions) {
+    return prefetch().then(() => chainedPermissions)
+  }*/
 
   function enterPermissions() {
     const permissions = listOfPermissions.map(perm => perm.onEnter || perm)
@@ -30,7 +39,7 @@ export default ({ isLoading, loading, listOfPermissions, store, prefetch }) => {
     onEnter: enterPermissions(),
     getComponent: () => listOfPermissions.reduceRight(
       (prev, next) => next(prev),
-      isLoading ? loading : component
+      component
     )
   })
 }
