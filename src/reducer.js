@@ -1,30 +1,33 @@
 import { RUN_SAGA, ADD_SAGA } from './constants'
 
-const initialState = {}
+import * as stored from './storedSagas'
 
-export default (state = initialState, action = {}) {
+export default (state = {}, action = {}) {
   switch (action.type) {
-    case ADD_SAGA:
+    /*case ADD_SAGA:
+      stored.addSaga(action.props)
+
       return {
         ...state,
-        [action.props.name]: {
-          saga: action.props.saga,
-          loading: false
-        }
-      }
+        //[action.props.component]: {
+          //props: action.props,
+          //loading: false
+        //}
+      }*/
 
     case RUN_SAGA:
       return _.merge({}, state, {
-        [action.props.name]: {
+        //[action.props.component]: {
+          props: action.props
           loading: true
-        }
+        //}
       })
 
     case STOP_SAGA:
       return _.merge({}, state, {
-        [action.props.name]: {
+        //[action.props.component]: {
           loading: false
-        }
+        //}
       })
 
     default:
